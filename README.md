@@ -54,6 +54,9 @@ This project implements an idempotent ETL pipeline that aggregates SpaceX Falcon
 - **DashboardService**: KPIs calculation, metrics retrieval, trend analysis
 - **CacheService**: Local caching to improve performance
 
+### Machine Learning
+Built an ML classification pipeline achieving 89% accuracy in predicting Falcon 9 first-stage landing outcomes using Logistic Regression with 8 engineered features, enabling actionable launch success forecasting for stakeholder decision-making.
+
 ### Visualization
 - **Tableau Integration**: Connect to Tableau Server, extract data from views, build dashboards programmatically
 - **PlotlyDashboard**: Interactive charts (line, bar, scatter, heatmap) exported to HTML
