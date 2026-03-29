@@ -1,6 +1,45 @@
-# Analyst Dashboard
+# SpaceX Falcon 9 Analyst Dashboard
 
-Idempotent analyst dashboard architecture with Supabase integration and support for dynamic visualizations including Tableau, Plotly, Panel, and Streamlit.
+Idempotent data pipeline that collects, transforms, and analyzes SpaceX Falcon 9 launch data from multiple sources, producing an analyst dashboard with Supabase integration and dynamic visualizations (Tableau, Plotly, Panel, Streamlit).
+
+## Data Pipeline Overview
+
+This project implements an idempotent ETL pipeline that aggregates SpaceX Falcon 9 launch data from multiple sources:
+
+| Source | Module | Description |
+|--------|--------|-------------|
+| SpaceX API | `spacex_data_collection.py` | REST API collection with pagination and rate limiting |
+| Wikipedia | `spacex_web_scraping.py` | Web scraping for Falcon 9 launch records |
+| CSV Files | `spacex_data_wrangling.py` | Local data loading and preprocessing |
+| SQLite Database | `spacex_sql_analysis.py` | SQL queries for exploratory analysis |
+| Feature Engineering | `spacex_data_wrangling.py` | Label generation and class balancing |
+
+## Modules
+
+| Module | Purpose |
+|--------|---------|
+| `spacex_data_collection.py` | Collects launch data from SpaceX REST API with automatic pagination |
+| `spacex_web_scraping.py` | Scrapes Falcon 9 launch records from Wikipedia tables |
+| `spacex_data_wrangling.py` | Cleans data, handles missing values, generates success/failure labels |
+| `spacex_eda_visualization.py` | Exploratory data analysis with matplotlib/seaborn visualizations |
+| `spacex_launch_site_location.py` | Geospatial analysis with Folium maps showing launch sites |
+| `spacex_sql_analysis.py` | SQL queries for filtering, aggregation, and trend analysis |
+| `spacex_ml_prediction.py` | Machine learning models for launch outcome prediction |
+
+### Pipeline Stages
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Data Sources  │───▶│  Data Wrangling │───▶│  EDA & Analysis │
+│  (API, Web, CSV)│    │  (Clean, Label) │    │  (SQL, Charts)  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  Dashboard      │◀───│  Visualization  │◀───│  ML Prediction  │
+│  (Supabase)     │    │  (Plotly, Folium│    │  (Classification│
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
 ## Features
 
@@ -29,10 +68,17 @@ Idempotent analyst dashboard architecture with Supabase integration and support 
 ## Directory Structure
 
 ```
-analyst-dashboard/
-├── src/
+Analyst-Projects/
+├── spacex_data_collection.py     # SpaceX API data collection
+├── spacex_web_scraping.py        # Wikipedia web scraping
+├── spacex_data_wrangling.py      # Data cleaning and labeling
+├── spacex_eda_visualization.py    # Exploratory data analysis
+├── spacex_launch_site_location.py # Geospatial analysis with Folium
+├── spacex_sql_analysis.py         # SQL-based analysis
+├── spacex_ml_prediction.py        # ML prediction models
+├── src/                          # Shared utilities
 │   ├── config/
-│   │   └── __init__.py       # Environment handling, singleton Config
+│   │   └── __init__.py          # Environment handling, singleton Config
 │   ├── data/
 │   │   ├── api/
 │   │   │   ├── __init__.py
@@ -49,11 +95,12 @@ analyst-dashboard/
 │   │   ├── __init__.py
 │   │   ├── tableau.py           # Tableau integration
 │   │   └── dynamic.py           # Plotly, Panel, Streamlit
-│   └── __init__.py              # Main AnalystDashboard class
+│   └── __init__.py
 ├── dashboards/                   # Tableau workbooks (.twb, .twbx)
-├── main.py                       # Application entry point
-├── requirements.txt              # Python dependencies
-├── .env                         # Environment variables
+├── notebooks/                     # Original Jupyter notebooks
+├── main.py                        # Application entry point
+├── requirements.txt               # Python dependencies
+├── .env                          # Environment variables
 └── .gitignore
 ```
 
@@ -101,6 +148,36 @@ python main.py --streamlit --port 8080
 ```
 
 ## Usage Examples
+
+### Run Data Collection Pipeline
+```bash
+# Collect data from SpaceX API
+python spacex_data_collection.py
+
+# Scrape data from Wikipedia
+python spacex_web_scraping.py
+
+# Run data wrangling and labeling
+python spacex_data_wrangling.py
+```
+
+### Data Analysis
+```bash
+# Run EDA visualizations
+python spacex_eda_visualization.py
+
+# Analyze launch site locations
+python spacex_launch_site_location.py
+
+# Execute SQL queries
+python spacex_sql_analysis.py
+```
+
+### Machine Learning
+```bash
+# Train prediction models
+python spacex_ml_prediction.py
+```
 
 ### Supabase Database Connection
 ```python
@@ -154,8 +231,13 @@ dashboard.add_widget("select", "region", options=["North", "South"])
 
 - Python 3.10+
 - pandas >= 2.0.0
-- supabase >= 2.0.0
+- numpy >= 1.24.0
 - requests >= 2.31.0
+- beautifulsoup4 >= 4.12.0
+- folium >= 0.14.0
+- sqlalchemy >= 2.0.0
+- scikit-learn >= 1.3.0
+- supabase >= 2.0.0
 - plotly >= 5.18.0
 - panel >= 1.3.0
 - streamlit >= 1.30.0
@@ -164,10 +246,10 @@ dashboard.add_widget("select", "region", options=["North", "South"])
 
 See `requirements.txt` for complete list.
 
-## Extending the Dashboard
+## Extending the Pipeline
 
-1. **Add new API sources**: Extend `APIClient` in `src/data/api/base_client.py`
-2. **Add new data models**: Define schemas in `src/models/__init__.py`
-3. **Add new business logic**: Implement in `src/services/__init__.py`
-4. **Add new visualizations**: Create in `src/visualizations/`
+1. **Add new data sources**: Create new collection modules following the pattern in `spacex_data_collection.py`
+2. **Add new transformations**: Extend `spacex_data_wrangling.py` with additional cleaning functions
+3. **Add new ML models**: Extend `spacex_ml_prediction.py` with additional classifiers
+4. **Add new visualizations**: Create in `src/visualizations/` or extend existing modules
 5. **Add Tableau workbooks**: Place in `dashboards/` directory
