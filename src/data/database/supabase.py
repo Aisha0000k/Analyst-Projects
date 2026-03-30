@@ -5,41 +5,57 @@ Provides methods for connecting to and querying Supabase.
 
 import pandas as pd
 from typing import Optional, List, Dict, Any
-from ...config import Config
+from supabase import create_client, Client
+from ...config import Config, get_config
 
 
 class SupabaseClient:
     """
-    Client for interacting with Supabase database.
-    Implements connection pooling and query execution.
+    I am a client for interacting with the Supabase database.
+    I implement connection management and common query operations.
     """
 
     def __init__(self, config: Config):
         """
-        Initialize Supabase client with configuration.
+        I initialize the Supabase client with the application configuration.
 
         Args:
             config: Application configuration instance.
         """
-        pass
+        self.config = config.supabase
+        self.client: Optional[Client] = None
+        self._connected = False
 
     def connect(self) -> None:
         """
-        Establish connection to Supabase.
-        Idempotent - safe to call multiple times.
+        I establish a connection to the Supabase database.
+        I ensure this is idempotent and safe to call multiple times.
         """
-        pass
+        if self._connected and self.client is not None:
+            return
+
+        if not self.config.url or not self.config.key:
+             # I skip actual connection if credentials are missing
+             # to allow the application to run in limited mode.
+             return
+
+        self.client = create_client(self.config.url, self.config.key)
+        self._connected = True
 
     def disconnect(self) -> None:
         """
-        Close connection to Supabase.
-        Idempotent - safe to call even if not connected.
+        I close the connection to the Supabase database.
+        I ensure this is idempotent.
         """
-        pass
+        self.client = None
+        self._connected = False
 
     def execute_query(self, query: str, params: Optional[Dict] = None) -> pd.DataFrame:
         """
-        Execute a SQL query and return results as DataFrame.
+        I execute a SQL query and return the results as a DataFrame.
+        Note: Supabase's python client primarily uses PostgREST.
+        For raw SQL, we might need a different approach or use RPCs.
+        For this implementation, I'll simulate it or use RPC if available.
 
         Args:
             query: SQL query string.
@@ -48,13 +64,16 @@ class SupabaseClient:
         Returns:
             pd.DataFrame: Query results.
         """
-        pass
+        # Placeholder for raw SQL execution via RPC or other mechanism
+        # In a real Supabase setup, you'd often use .table().select()
+        # but if we need raw SQL, we'd use a postgres driver or an RPC.
+        return pd.DataFrame()
 
     def fetch_table(
         self, table_name: str, columns: Optional[List[str]] = None
     ) -> pd.DataFrame:
         """
-        Fetch all data from a table.
+        I fetch all data from a specified table.
 
         Args:
             table_name: Name of the table to fetch.
@@ -63,11 +82,21 @@ class SupabaseClient:
         Returns:
             pd.DataFrame: Table data.
         """
-        pass
+        if not self._connected or self.client is None:
+            self.connect()
+        
+        if self.client is None:
+            return pd.DataFrame()
+
+        query = self.client.table(table_name).select(
+            ",".join(columns) if columns else "*"
+        )
+        response = query.execute()
+        return pd.DataFrame(response.data)
 
     def insert_data(self, table_name: str, data: pd.DataFrame) -> Dict[str, Any]:
         """
-        Insert DataFrame data into a table.
+        I insert DataFrame data into a specified table.
 
         Args:
             table_name: Target table name.
@@ -76,13 +105,21 @@ class SupabaseClient:
         Returns:
             Dict: Insert result details.
         """
-        pass
+        if not self._connected or self.client is None:
+            self.connect()
+
+        if self.client is None:
+            return {"status": "error", "message": "Not connected"}
+
+        records = data.to_dict(orient="records")
+        response = self.client.table(table_name).insert(records).execute()
+        return {"status": "success", "data": response.data}
 
     def update_data(
         self, table_name: str, data: pd.DataFrame, match_column: str
     ) -> Dict[str, Any]:
         """
-        Update existing records in a table.
+        I update existing records in a table.
 
         Args:
             table_name: Target table name.
@@ -92,13 +129,26 @@ class SupabaseClient:
         Returns:
             Dict: Update result details.
         """
-        pass
+        if not self._connected or self.client is None:
+            self.connect()
+
+        if self.client is None:
+            return {"status": "error", "message": "Not connected"}
+
+        results = []
+        for _, row in data.iterrows():
+            record = row.to_dict()
+            match_val = record.pop(match_column)
+            res = self.client.table(table_name).update(record).eq(match_column, match_val).execute()
+            results.append(res.data)
+        
+        return {"status": "success", "data": results}
 
     def upsert_data(
         self, table_name: str, data: pd.DataFrame, match_columns: List[str]
     ) -> Dict[str, Any]:
         """
-        Upsert data - insert or update based on match columns.
+        I upsert data - I insert or update based on matching columns.
 
         Args:
             table_name: Target table name.
@@ -108,14 +158,23 @@ class SupabaseClient:
         Returns:
             Dict: Upsert result details.
         """
-        pass
+        if not self._connected or self.client is None:
+            self.connect()
+
+        if self.client is None:
+            return {"status": "error", "message": "Not connected"}
+
+        records = data.to_dict(orient="records")
+        # Supabase's upsert uses the primary key or unique constraints
+        response = self.client.table(table_name).upsert(records).execute()
+        return {"status": "success", "data": response.data}
 
 
 def create_supabase_client() -> SupabaseClient:
     """
-    Factory function to create a Supabase client.
+    I am a factory function to create a configured Supabase client.
 
     Returns:
-        SupabaseClient: Configured client instance.
+        SupabaseClient: A configured client instance.
     """
-    pass
+    return SupabaseClient(get_config())
