@@ -3,7 +3,7 @@ Data models and schemas for the analyst dashboard.
 Defines data structures used across the application.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import pandas as pd
@@ -12,7 +12,7 @@ import pandas as pd
 @dataclass
 class DataSource:
     """
-    Represents a data source configuration.
+    I represent a data source configuration.
     """
 
     name: str
@@ -24,50 +24,59 @@ class DataSource:
 @dataclass
 class DashboardMetric:
     """
-    Represents a single metric displayed on the dashboard.
+    I represent a single metric displayed on the dashboard.
     """
 
     name: str
     value: Any
     unit: Optional[str] = None
     trend: Optional[float] = None
-    last_updated: Optional[datetime] = None
+    last_updated: datetime = field(default_factory=datetime.now)
 
 
 @dataclass
 class QueryResult:
     """
-    Container for database query results.
+    I am a container for database query results.
     """
 
     data: pd.DataFrame
     query: str
     execution_time: float
     row_count: int
-    timestamp: datetime
+    timestamp: datetime = field(default_factory=datetime.now)
 
     def is_empty(self) -> bool:
-        """Check if query returned any results."""
-        pass
+        """I check if the query returned any results."""
+        return self.data.empty
 
     def to_csv(self, path: str) -> None:
-        """Export results to CSV file."""
-        pass
+        """I export the results to a CSV file."""
+        self.data.to_csv(path, index=False)
 
     def to_json(self, path: str) -> None:
-        """Export results to JSON file."""
-        pass
+        """I export the results to a JSON file."""
+        self.data.to_json(path, orient="records", indent=2)
 
 
 class DataSchema:
     """
-    Schema definitions for data validation and transformation.
+    I define schemas for data validation and transformation.
     """
+
+    _schemas = {
+        "spacex_launches": [
+            "FlightNumber", "Date", "BoosterVersion", "PayloadMass",
+            "Orbit", "LaunchSite", "Outcome", "Flights", "GridFins",
+            "Reused", "Legs", "LandingPad", "Block", "ReusedCount",
+            "Serial", "Longitude", "Latitude"
+        ]
+    }
 
     @staticmethod
     def validate_dataframe(df: pd.DataFrame, schema_name: str) -> bool:
         """
-        Validate a DataFrame against a known schema.
+        I validate a DataFrame against a known schema.
 
         Args:
             df: DataFrame to validate.
@@ -76,12 +85,13 @@ class DataSchema:
         Returns:
             bool: True if valid, False otherwise.
         """
-        pass
+        expected = DataSchema.get_expected_columns(schema_name)
+        return all(col in df.columns for col in expected)
 
     @staticmethod
     def get_expected_columns(schema_name: str) -> List[str]:
         """
-        Get expected column names for a schema.
+        I return the expected column names for a given schema.
 
         Args:
             schema_name: Name of the schema.
@@ -89,4 +99,4 @@ class DataSchema:
         Returns:
             List[str]: List of expected column names.
         """
-        pass
+        return DataSchema._schemas.get(schema_name, [])

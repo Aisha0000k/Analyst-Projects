@@ -5,7 +5,7 @@ Provides methods for connecting to and querying Supabase.
 
 import pandas as pd
 from typing import Optional, List, Dict, Any
-from ..config import Config
+from ...config import Config
 
 
 class SupabaseClient:
