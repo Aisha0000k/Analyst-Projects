@@ -30,3 +30,4 @@ openpyxl>=3.1.0
 
 # Optional: Data caching
 diskcache>=5.6.0
+flask>=3.0.0
