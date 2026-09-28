@@ -6,7 +6,7 @@ the Falcon 9 first stage will land successfully. I test multiple
 classification algorithms including Logistic Regression, SVM,
 Decision Trees, and K-Nearest Neighbors.
 
-Author: Yaseen
+Author: Aisha
 """
 
 import pandas as pd
