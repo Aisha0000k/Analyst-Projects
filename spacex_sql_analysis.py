@@ -5,7 +5,7 @@ I perform SQL-based analysis on SpaceX launch data using SQLite.
 I connect to a database, load launch records, and execute queries
 to answer analytical questions about launches.
 
-Author: Yaseen
+Author: Aisha
 """
 
 import sqlite3
